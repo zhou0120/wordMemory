@@ -2,6 +2,7 @@ package com.homework.ui;
 import com.homework.domain.User;
 
 import javax.swing.*;
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyListener;
@@ -73,6 +74,7 @@ public class LoginJFrame extends JFrame implements ActionListener, KeyListener {
         this.setDefaultCloseOperation(3);//设置窗口关闭操作,关闭一个窗口，虚拟机就停止
         this.setLayout(null);
         init_all();
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
 
     }
@@ -94,24 +96,43 @@ public class LoginJFrame extends JFrame implements ActionListener, KeyListener {
         aboutmenu.add(aboutItem);
         jMenuBar.add(jMenu);
         jMenuBar.add(aboutmenu);
+        UiKit.styleMenuBar(jMenuBar);
         this.setJMenuBar(jMenuBar);
     }
     private void init_all(){
-        jButton1 = new JButton("登陆");
-        jButton2 = new JButton("注册");
-        jButton1.setBounds(100, 300, 100, 30);
-        jButton2.setBounds(400, 300, 100, 30);
+        // 主按钮“登录”、文字链接“立即注册”
+        jButton1 = new UiKit.PrimaryButton("登录");
+        jButton2 = UiKit.linkButton("立即注册");
         jButton1.addActionListener(this);
         jButton2.addActionListener(this);
         initMenu();
-        jTextField = new JTextField();
-        jPasswordField = new JPasswordField();
-        jTextField.setBounds(200, 200, 200, 30);
-        jPasswordField.setBounds(200, 250, 200, 30);
-        this.add(jTextField);
-        this.add(jPasswordField);
-        this.add(jButton1);
-        this.add(jButton2);
+
+        // 圆角输入框
+        jTextField = UiKit.textField();
+        jPasswordField = UiKit.passwordField();
+        // 回车等同于点“登录”，走的是同一个 actionPerformed
+        UiKit.submitOnEnter(jTextField, jButton1);
+        UiKit.submitOnEnter(jPasswordField, jButton1);
+
+        JPanel box = UiKit.formBox();
+        box.add(UiKit.title("欢迎回来"));
+        box.add(UiKit.subtitle("登录后继续你的单词计划"));
+        box.add(UiKit.gap(24));
+        box.add(UiKit.fieldLabel("用户名"));
+        box.add(jTextField);
+        box.add(UiKit.gap(14));
+        box.add(UiKit.fieldLabel("密码"));
+        box.add(jPasswordField);
+        box.add(UiKit.gap(24));
+        box.add(jButton1);
+        box.add(UiKit.gap(14));
+        box.add(UiKit.linkRow("还没有账号？", jButton2));
+
+        JPanel content = new JPanel(new BorderLayout());
+        content.setBackground(UiKit.BG);
+        content.add(UiKit.brandPanel("单词背诵", "WordMemory", "每日一背 · 积少成多"), BorderLayout.WEST);
+        content.add(UiKit.formCenter(box), BorderLayout.CENTER);
+        this.setContentPane(content);
     }
     @Override
     public void actionPerformed(ActionEvent e) {

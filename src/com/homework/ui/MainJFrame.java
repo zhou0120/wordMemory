@@ -13,13 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 public class MainJFrame extends JFrame implements ActionListener{
     JMenuBar jMenuBar;
     JMenu aboutmenu;
@@ -28,14 +21,13 @@ public class MainJFrame extends JFrame implements ActionListener{
     JMenuItem jMenuItem2;
     JMenuItem aboutItem;
 
-    // 主页面：根容器 + 上部(1/7) / 中部(1/7) / 下部(5/7)
-    // 声明成成员变量，后续往各区域里加组件时可以直接引用
+
     JPanel mainPanel;
     JPanel topPanel;
     JPanel centerPanel;
     JPanel bottomPanel;
 
-    // 顶部栏三个组件：左侧品牌名、右侧用户名、用户名左边的姓氏圆角框
+
     JLabel brandLabel;
     JLabel userNameLabel;
     JLabel surnameBadge;
@@ -153,11 +145,10 @@ public class MainJFrame extends JFrame implements ActionListener{
         topPanel.add(surnameBadge);
     }
     private void initcenter(){
-        // 只建对象、设样式；位置交给 layoutCenter() 按面板实际大小算（见下方注释）
         centerButton = new JButton("开始背诵");
         centerButton.setFont(new Font("PingFang SC", Font.BOLD, 14));
         centerButton.setFocusPainted(false);
-        centerButton.addActionListener(this);   // 注册监听器，否则 actionPerformed 不会被触发
+        centerButton.addActionListener(this);
         centerPanel.add(centerButton);
 
         centerLabel = new JLabel("今日单词");
@@ -166,14 +157,7 @@ public class MainJFrame extends JFrame implements ActionListener{
         centerPanel.add(centerLabel);
     }
 
-    /**
-     * 中部区域排版：文字“今日单词”在左、按钮“开始背诵”在右，整体水平+垂直居中。
-     *
-     * 之前不显示的原因：中部只有 1/7 高（1000×700 下仅 92px），
-     * 而原来写 setBounds(100,100,...) / (100,200,...)，
-     * y=100、y=200 已超出面板高度，null 布局不会滚动也不报错，直接被裁掉看不见。
-     * 现在坐标全部由面板实际宽高算出，永远不会跑到面板外。
-     */
+
     private void layoutCenter(){
         if (centerPanel == null || centerButton == null) return;
         int w = centerPanel.getWidth();
@@ -192,10 +176,7 @@ public class MainJFrame extends JFrame implements ActionListener{
         centerButton.setBounds(startX + lblW + gap, (h - btnH) / 2, btnW, btnH); // 右：开始背诵
     }
 
-    /**
-     * 顶部栏排版：左侧品牌名靠左垂直居中，右侧“姓 + 用户名”整体贴右，
-     * 每次窗口尺寸变化都会重新按面板宽度摆放，所以拉伸窗口不会错位。
-     */
+
     private void layoutHeader(){
         if (topPanel == null || brandLabel == null) return;
         int w = topPanel.getWidth();

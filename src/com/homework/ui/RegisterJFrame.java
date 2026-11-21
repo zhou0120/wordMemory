@@ -2,6 +2,7 @@ package com.homework.ui;
 import com.homework.domain.User;
 
 import javax.swing.*;
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -35,27 +36,45 @@ public class RegisterJFrame extends JFrame implements ActionListener{
         this.setLayout(null);
         init_all();
         initMenu();
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
     private void init_all(){
-        jButton1 = new JButton("注册");
-        jButton2 = new JButton("返回");
+        jButton1 = new UiKit.PrimaryButton("注册");
+        jButton2 = UiKit.linkButton("返回登录");
         jButton1.addActionListener(this);
         jButton2.addActionListener(this);
-        jButton1.setBounds(200, 350, 100, 30);
-        jButton2.setBounds(300, 350, 100, 30);
 
-        jTextField = new JTextField();
-        jPasswordField1 = new JPasswordField();
-        jPasswordField2 = new JPasswordField();
-        jTextField.setBounds(200, 200, 200, 30);
-        jPasswordField1.setBounds(200, 250, 200, 30);
-        jPasswordField2.setBounds(200, 300, 200, 30);
-        this.add(jTextField);
-        this.add(jPasswordField1);
-        this.add(jPasswordField2);
-        this.add(jButton1);
-        this.add(jButton2);
+        jTextField = UiKit.textField();
+        jPasswordField1 = UiKit.passwordField();
+        jPasswordField2 = UiKit.passwordField();
+        // 回车等同于点“注册”
+        UiKit.submitOnEnter(jTextField, jButton1);
+        UiKit.submitOnEnter(jPasswordField1, jButton1);
+        UiKit.submitOnEnter(jPasswordField2, jButton1);
+
+        JPanel box = UiKit.formBox();
+        box.add(UiKit.title("创建账号"));
+        box.add(UiKit.subtitle("设置用户名和密码，开始你的单词计划"));
+        box.add(UiKit.gap(14));
+        box.add(UiKit.fieldLabel("用户名"));
+        box.add(jTextField);
+        box.add(UiKit.gap(8));
+        box.add(UiKit.fieldLabel("密码"));
+        box.add(jPasswordField1);
+        box.add(UiKit.gap(8));
+        box.add(UiKit.fieldLabel("确认密码"));
+        box.add(jPasswordField2);
+        box.add(UiKit.gap(14));
+        box.add(jButton1);
+        box.add(UiKit.gap(10));
+        box.add(UiKit.linkRow("已有账号？", jButton2));
+
+        JPanel content = new JPanel(new BorderLayout());
+        content.setBackground(UiKit.BG);
+        content.add(UiKit.brandPanel("单词背诵", "WordMemory", "每日一背 · 积少成多"), BorderLayout.WEST);
+        content.add(UiKit.formCenter(box), BorderLayout.CENTER);
+        this.setContentPane(content);
     }
     private void initMenu(){
         jMenuBar = new JMenuBar();
@@ -75,6 +94,7 @@ public class RegisterJFrame extends JFrame implements ActionListener{
         aboutmenu.add(aboutItem);
         jMenuBar.add(jMenu);
         jMenuBar.add(aboutmenu);
+        UiKit.styleMenuBar(jMenuBar);
         this.setJMenuBar(jMenuBar);
     }
     private boolean isDistinct(String name){
