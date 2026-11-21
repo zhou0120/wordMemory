@@ -51,7 +51,7 @@ public class LoginJFrame extends JFrame implements ActionListener, KeyListener {
     }
     private List<String> readUsersbyline() throws IOException {
         List<String> strlist = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new FileReader("/Users/zhoubohao/Code/JAVAcode/Wordmemory/UserInfor.txt"));
+        BufferedReader br = new BufferedReader(new FileReader("src/com/homework/data/UserInfor.txt"));
         String line;
         while((line = br.readLine())!=null){
             if(line.trim().isEmpty())continue;
@@ -131,7 +131,7 @@ public class LoginJFrame extends JFrame implements ActionListener, KeyListener {
 
                 JOptionPane.showMessageDialog(this, "登录成功");
                 this.dispose();
-                new MainJFrame(1000, 700);
+                new MainJFrame(1000, 700, username);
 
             }
             else{

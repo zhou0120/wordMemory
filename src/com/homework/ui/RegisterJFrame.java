@@ -95,7 +95,7 @@ public class RegisterJFrame extends JFrame implements ActionListener{
     }
     private List<String> readUsersbyline() throws IOException {
         List<String> strlist = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new FileReader("/Users/zhoubohao/Code/JAVAcode/Wordmemory/UserInfor.txt"));
+        BufferedReader br = new BufferedReader(new FileReader("src/com/homework/data/UserInfor.txt"));
         String line;
         while((line = br.readLine())!=null){
             if(line.trim().isEmpty())continue;
@@ -113,7 +113,7 @@ public class RegisterJFrame extends JFrame implements ActionListener{
     private void Rigester(String username, String password) throws IOException {
         String line = "username=" + username + "&password=" + password;
         try{
-            BufferedWriter bw = new BufferedWriter(new FileWriter("/Users/zhoubohao/Code/JAVAcode/Wordmemory/UserInfor.txt",true));
+            BufferedWriter bw = new BufferedWriter(new FileWriter("src/com/homework/data/UserInfor.txt",true));
             bw.newLine();
             bw.write(line);
             bw.close();
