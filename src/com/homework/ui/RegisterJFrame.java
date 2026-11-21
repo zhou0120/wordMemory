@@ -150,7 +150,7 @@ public class RegisterJFrame extends JFrame implements ActionListener{
                 JOptionPane.showMessageDialog(this, "密码长度在6-20之间");
                 return;
             }
-            else if(!pass1.matches("[a-zA-Z]+") || !pass1.matches("[0-9]+")) {
+            else if (!pass1.matches("^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d]+$")) {
                 JOptionPane.showMessageDialog(this, "密码必须由字母和数字组成");
                 return;
             }

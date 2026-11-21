@@ -128,7 +128,11 @@ public class LoginJFrame extends JFrame implements ActionListener, KeyListener {
                 return;
             }
             if(users.contains(new User(username, password))){
+
                 JOptionPane.showMessageDialog(this, "登录成功");
+                this.dispose();
+                new MainJFrame(1000, 700);
+
             }
             else{
                 JOptionPane.showMessageDialog(this, "用户名或密码错误");
