@@ -52,7 +52,7 @@ public class LoginJFrame extends JFrame implements ActionListener, KeyListener {
     }
     private List<String> readUsersbyline() throws IOException {
         List<String> strlist = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new FileReader("src/com/homework/data/UserInfor.txt"));
+        BufferedReader br = new BufferedReader(new FileReader("data/UserInfor.txt"));
         String line;
         while((line = br.readLine())!=null){
             if(line.trim().isEmpty())continue;
