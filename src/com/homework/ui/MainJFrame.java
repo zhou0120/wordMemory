@@ -34,6 +34,8 @@ public class MainJFrame extends JFrame implements ActionListener{
     // 中部按钮和今日单词
     JButton centerButton;
     JLabel centerLabel;
+    // 当前登录用户名：打开拼写页时带过去，拼写页点“返回”才能回到同一个用户的主页面
+    String userName = "";
 
     public MainJFrame(){}
     public MainJFrame(int width,int height, String username){
@@ -83,6 +85,7 @@ public class MainJFrame extends JFrame implements ActionListener{
          * 3. 监听 mainPanel 的尺寸变化，每次窗口大小改变都重新切一次，比例始终是 1/7、1/7、5/7。
          * 4. 三个区域内部仍是 null 布局，后续直接 setBounds 往里放按钮、标签、图片即可。
          */
+        this.userName = (name == null) ? "" : name.trim();   // 记住用户名，供“开始背诵”页返回时使用
         mainPanel = new JPanel(null);           // 根容器：自己切分
 
         topPanel = new JPanel(null);            // 上部 1/7
@@ -268,7 +271,7 @@ public class MainJFrame extends JFrame implements ActionListener{
         }
         else if(obj == centerButton){
             this.dispose();
-            new WordJFrame(1000,700);
+            new WordJFrame(1000, 700, userName);   // 带上用户名，拼写页返回时能回到本用户的主页面
         }
     }
 }
