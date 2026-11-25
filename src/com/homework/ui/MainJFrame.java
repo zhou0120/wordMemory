@@ -186,7 +186,7 @@ public class MainJFrame extends JFrame implements ActionListener{
     /** 扫描 data 目录下的 .txt，刷新词库下拉的可选项；首次默认全选。 */
     private void refreshLibraryList(){
         List<String> names = new ArrayList<>();
-        File[] files = new File("data").listFiles((d, n) -> n.toLowerCase().endsWith(".txt"));
+        File[] files = new File("data/repositories").listFiles((d, n) -> n.toLowerCase().endsWith(".txt"));
         if (files != null) {
             Arrays.sort(files, Comparator.comparing(File::getName));
             for (File f : files) {
@@ -210,7 +210,7 @@ public class MainJFrame extends JFrame implements ActionListener{
         FileLoadService fls = new FileLoadService();
         List<Word> words = new ArrayList<>();
         for (String name : names) {
-            words.addAll(fls.loadWords("data/" + name));
+            words.addAll(fls.loadWords("data/repositories/" + name));
         }
         if (words.isEmpty()) {
             JOptionPane.showMessageDialog(this, "选中的词库里没有可用的单词。",
