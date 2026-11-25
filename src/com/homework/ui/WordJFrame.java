@@ -7,6 +7,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.List;
 import com.homework.Service.SpellService;
 import com.homework.domain.Word;
 public class WordJFrame extends JFrame implements ActionListener,KeyListener {
@@ -30,18 +31,37 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
     JButton jbutton;
     JButton back;
     String userName = "";                                     // 从主页面带过来的用户名，点“返回”时要带回主页面
-    SpellService sp = new SpellService("data/word1.txt");
+    SpellService sp;                                          // 词库路径由构造函数决定
     public WordJFrame(){
+        this("data/word1.txt");
+    }
+    public WordJFrame(String wordFilePath){
+        sp = new SpellService(wordFilePath);
         initMenu();
     }
     public WordJFrame(int width,int height){
-        initJFrame(width,height);
+        this(width, height, "", "data/word1.txt");
     }
     public WordJFrame(int width,int height,String userName){
+        this(width, height, userName, "data/word1.txt");
+    }
+    /** 完整构造：可指定词库文件路径。导入用户自定义词库后通过此构造直接开背。 */
+    public WordJFrame(int width,int height,String userName, String wordFilePath){
         this.userName = (userName == null) ? "" : userName;
+        sp = new SpellService(wordFilePath);
+        initJFrame(width,height);
+    }
+    /** 用合并好的单词列表开背（主页勾选多个词库时用）。 */
+    public WordJFrame(int width,int height,String userName, List<Word> words){
+        this.userName = (userName == null) ? "" : userName;
+        sp = new SpellService(words);
         initJFrame(width,height);
     }
     private void initJFrame(int width,int height){
+        // count/ErrCount 是 static，切换词库重新进入时如果不归零，会用旧下标越界
+        count = 0;
+        ErrCount = 0;
+        list.clear();
         this.setTitle("单词拼写");
         this.setSize(width,height);
         this.setLocationRelativeTo(null);

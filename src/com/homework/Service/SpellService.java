@@ -16,6 +16,10 @@ public class SpellService {
         wordList = new ArrayList<>();
         this.loadWords(filePath);
     }
+    /** 直接用现成的单词列表（多个词库合并后背诵时用）。 */
+    public SpellService(List<Word> words){
+        this.wordList = (words == null) ? new ArrayList<>() : words;
+    }
     private void loadWords(String filePath) {
         try{
             br = new BufferedReader(new FileReader(filePath));
