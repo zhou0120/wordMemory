@@ -39,8 +39,13 @@ public class MainJFrame extends JFrame implements ActionListener{
     JMenuBar jMenuBar;
     JMenu aboutmenu;
     JMenu jMenu;
+    JMenu jMenu_background;
     JMenuItem jMenuItem1;
     JMenuItem jMenuItem2;
+
+
+    JMenuItem Item1;
+    JMenuItem Item2;
     JMenuItem aboutItem;
 
 
@@ -83,18 +88,26 @@ public class MainJFrame extends JFrame implements ActionListener{
     private void initMenu(){
         jMenuBar = new JMenuBar();
         jMenu = new JMenu("菜单");
+        jMenu_background= new JMenu("壁纸");
         aboutmenu = new JMenu("关于我们");
         jMenuItem1 = new JMenuItem("退出");
         jMenuItem2 = new JMenuItem("重新登录");
+
+        Item1 = new JMenuItem("壁纸1");
+        Item2 = new JMenuItem("壁纸2");
+        jMenu_background.add(Item1);
+        jMenu_background.add(Item2);
         aboutItem = new JMenuItem("公众号");
         jMenuItem1.addActionListener(this);
         jMenuItem2.addActionListener(this);
         aboutItem.addActionListener(this);
-
+        Item1.addActionListener(this);
+        Item2.addActionListener(this);
 
 
         jMenu.add(jMenuItem1);
         jMenu.add(jMenuItem2);
+        jMenu.add(jMenu_background);
         aboutmenu.add(aboutItem);
         jMenuBar.add(jMenu);
         jMenuBar.add(aboutmenu);
@@ -370,6 +383,11 @@ public class MainJFrame extends JFrame implements ActionListener{
             JOptionPane.showMessageDialog(this, "公众号：程序员速成");
         } else if (obj == centerButton) {
             startReciting();
+        }else if(obj == Item1){
+            JOptionPane.showMessageDialog(this,"您已更换壁纸1");
+        }
+        else if(obj == Item2){
+            JOptionPane.showMessageDialog(this,"Item2");
         }
     }
 

@@ -1,8 +1,6 @@
-苹果,/ˈæpl/,apple
-香蕉,/bəˈnɑːnə/,banana
-橙子,/ˈɒrɪndʒ/,orange
-葡萄,/ɡreɪp/,grape
-机场,/ˈeəpɔːt/,airport
-航站楼,/ˈtɜːmɪnl/,terminal
-跑道,/ˈrʌnweɪ/,runway
-滑行道,/ˈtæksɪweɪ/,taxiway
+猫,/kæt/,cat
+狗,/dɒɡ/,dog
+鸟,/bɜːd/,bird
+猫,/kæt/,cat
+狗,/dɒɡ/,dog
+鸟,/bɜːd/,bird
