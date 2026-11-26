@@ -27,6 +27,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 public class MainJFrame extends JFrame implements ActionListener{
+
+    /**
+     * 词库统一存放目录。
+     * 之前导入时复制到 data/，而列表扫描和加载都用 data/repositories/，
+     * 路径不一致导致“导入成功但列表里看不到、点开始提示词库为空”，
+     * 现在三处统一走这个常量。
+     */
+    static final String LIBRARY_DIR = "data/repositories";
+
     JMenuBar jMenuBar;
     JMenu aboutmenu;
     JMenu jMenu;
@@ -50,6 +59,8 @@ public class MainJFrame extends JFrame implements ActionListener{
     LibrarySelector librarySelector;
     // 底部：导入卡片
     ImportCard importCard;
+    ReviewCard reviewCard;
+
     JLabel centerLabel;
     // 当前登录用户名：打开拼写页时带过去，拼写页点“返回”才能回到同一个用户的主页面
     String userName = "";
@@ -183,10 +194,10 @@ public class MainJFrame extends JFrame implements ActionListener{
         centerPanel.add(centerLabel);
     }
 
-    /** 扫描 data 目录下的 .txt，刷新词库下拉的可选项；首次默认全选。 */
+    /** 扫描词库目录下的 .txt，刷新词库下拉的可选项；首次默认全选。 */
     private void refreshLibraryList(){
         List<String> names = new ArrayList<>();
-        File[] files = new File("data/repositories").listFiles((d, n) -> n.toLowerCase().endsWith(".txt"));
+        File[] files = new File(LIBRARY_DIR).listFiles((d, n) -> n.toLowerCase().endsWith(".txt"));
         if (files != null) {
             Arrays.sort(files, Comparator.comparing(File::getName));
             for (File f : files) {
@@ -210,10 +221,11 @@ public class MainJFrame extends JFrame implements ActionListener{
         FileLoadService fls = new FileLoadService();
         List<Word> words = new ArrayList<>();
         for (String name : names) {
-            words.addAll(fls.loadWords("data/repositories/" + name));
+            words.addAll(fls.loadWords(new File(LIBRARY_DIR, name).getPath()));
         }
         if (words.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "选中的词库里没有可用的单词。",
+            JOptionPane.showMessageDialog(this,
+                    "选中的词库里没有可用的单词。\n读取目录：" + new File(LIBRARY_DIR).getAbsolutePath(),
                     "词库为空", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -223,7 +235,9 @@ public class MainJFrame extends JFrame implements ActionListener{
 
     private void initBottom(){
         importCard = new ImportCard();
+        reviewCard = new ReviewCard();
         bottomPanel.add(importCard);
+        bottomPanel.add(reviewCard);
     }
 
 
@@ -249,14 +263,19 @@ public class MainJFrame extends JFrame implements ActionListener{
     }
 
     private void layoutBottom(){
-        if (bottomPanel == null || importCard == null) return;
+        if (bottomPanel == null || importCard == null || reviewCard == null) return;
         int w = bottomPanel.getWidth();
         int h = bottomPanel.getHeight();
         if (w <= 0 || h <= 0) return;
 
-        // 卡片在底部空旷区域居中，稍微偏上一点，视觉重心更稳
-        int cardW = 160, cardH = 140;
-        importCard.setBounds((w - cardW) / 2, (h - cardH) / 2 - 10, cardW, cardH);
+        // 两张卡片并排居中，中间留 24px 间距（原来是 ±50 的硬偏移，两卡会重叠 60px）
+        int cardW = 176, cardH = 152;
+        int gap = 24;
+        int totalW = cardW * 2 + gap;
+        int startX = (w - totalW) / 2;
+        int startY = (h - cardH) / 2 - 10;                  // 稍微偏上一点，视觉重心更稳
+        importCard.setBounds(startX, startY, cardW, cardH);
+        reviewCard.setBounds(startX + cardW + gap, startY, cardW, cardH);
     }
 
 
@@ -377,20 +396,22 @@ public class MainJFrame extends JFrame implements ActionListener{
         if (fls.isValidWordFile(path)) {
             int count = fls.loadWords(path).size();
 
-            // 复制到 data 目录，成为下拉列表里的一个可选词库（下次进来还在）
+            // 复制到词库目录，成为下拉列表里的一个可选词库（下次进来还在）
             File src = chooser.getSelectedFile();
-            File dest = new File("data", src.getName());
+            File dir = new File(LIBRARY_DIR);
+            if (!dir.exists() && !dir.mkdirs()) {                 // 目录不存在时先建出来，否则复制会失败
+                JOptionPane.showMessageDialog(this, "创建词库目录失败：" + dir.getAbsolutePath(),
+                        "导入失败", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            File dest = new File(dir, src.getName());
             try {
                 if (!src.getCanonicalPath().equals(dest.getCanonicalPath())) {
-                    File dir = new File("data");
-                    if (!dir.exists()) {
-                        dir.mkdirs();
-                    }
                     java.nio.file.Files.copy(src.toPath(), dest.toPath(),
                             java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 }
             } catch (java.io.IOException ex) {
-                JOptionPane.showMessageDialog(this, "文件复制到 data 目录失败：" + ex.getMessage(),
+                JOptionPane.showMessageDialog(this, "文件复制到词库目录失败：" + ex.getMessage(),
                         "导入失败", JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -538,9 +559,100 @@ public class MainJFrame extends JFrame implements ActionListener{
     }
 
     /**
-     * 底部功能卡片：圆角白底 + 浅蓝图标底 + 蓝色导入图标 + 文字。
+     * 底部功能卡片：圆角白底 + 浅蓝图标底 + 环形箭头图标 + 文字。
      * 悬停时描边变主色、底色微微泛蓝，做出可点击的反馈；图标全部用 Graphics2D 画，不依赖图片文件。
      */
+    private class ReviewCard extends JComponent {//错题复习卡片
+        private boolean hover;
+
+        ReviewCard() {
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            addMouseListener(new MouseAdapter() {
+                @Override public void mouseEntered(MouseEvent e) { hover = true;  repaint(); }
+                @Override public void mouseExited(MouseEvent e)  { hover = false; repaint(); }
+                @Override public void mouseClicked(MouseEvent e) {
+                    MainJFrame.this.dispose();
+                    new ReviewJFrame(800, 600, userName);
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+
+            int w = getWidth();
+            paintCardFrame(g2, this, hover);          // 统一的圆角白底 + 细边
+            int iconY = paintCardIconBase(g2, this, hover);   // 统一的浅蓝图标底盘
+
+            // 复习图标：环形箭头（表示“回头再来一遍”）
+            int cx = w / 2;
+            int cy = iconY + 27;
+            int r = 14;
+            g2.setColor(UiKit.PRIMARY);
+            g2.setStroke(new BasicStroke(2.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawArc(cx - r, cy - r, 2 * r, 2 * r, 40, 280);      // 从 40° 逆时针画 280°，右上留出口子
+
+            // 箭头画在圆弧终点：顶点在终点，两条线往后张开成 V
+            double endRad = Math.toRadians(40 + 280);
+            double px = cx + r * Math.cos(endRad);
+            double py = cy - r * Math.sin(endRad);
+            double tx = -Math.sin(endRad);                       // 切线方向（屏幕坐标，y 向下）
+            double ty = -Math.cos(endRad);
+            double perpX = -ty, perpY = tx;                      // 切线法向，用来把 V 张开
+            double len = 8;
+            g2.drawLine((int) px, (int) py,
+                    (int) (px - tx * len + perpX * len * 0.6),
+                    (int) (py - ty * len + perpY * len * 0.6));
+            g2.drawLine((int) px, (int) py,
+                    (int) (px - tx * len - perpX * len * 0.6),
+                    (int) (py - ty * len - perpY * len * 0.6));
+
+            paintCardText(g2, this, hover, "错题复习", "把做错的词再过一遍");
+            g2.dispose();
+        }
+    }
+
+    /* ================= 底部卡片的公共绘制 ================= */
+
+    /** 卡片外框：白底圆角 + 细边，悬停时底色泛蓝、描边变主色。 */
+    private static void paintCardFrame(Graphics2D g2, JComponent c, boolean hover) {
+        int w = c.getWidth();
+        int h = c.getHeight();
+        g2.setColor(hover ? new Color(0xFBFDFF) : Color.WHITE);
+        g2.fillRoundRect(0, 0, w - 1, h - 1, 20, 20);
+        g2.setColor(hover ? UiKit.PRIMARY : new Color(0xD8E5F3));
+        g2.setStroke(new BasicStroke(1f));
+        g2.drawRoundRect(0, 0, w - 1, h - 1, 20, 20);
+    }
+
+    /** 图标底盘：浅蓝圆角方块，返回图标的顶边 y，方便各卡片在里面画自己的图标。 */
+    private static int paintCardIconBase(Graphics2D g2, JComponent c, boolean hover) {
+        int iconSize = 54;
+        int iconX = (c.getWidth() - iconSize) / 2;
+        int iconY = 24;
+        g2.setColor(hover ? new Color(0xD6E9FF) : new Color(0xEAF3FE));
+        g2.fillRoundRect(iconX, iconY, iconSize, iconSize, 16, 16);
+        return iconY;
+    }
+
+    /** 卡片文字：主标题（深色/悬停变蓝）+ 一行灰色小字说明，整体水平居中。 */
+    private static void paintCardText(Graphics2D g2, JComponent c, boolean hover, String title, String sub) {
+        int w = c.getWidth();
+        int h = c.getHeight();
+
+        g2.setFont(new Font("PingFang SC", Font.BOLD, 14));
+        g2.setColor(hover ? UiKit.PRIMARY : new Color(0x1B2733));
+        FontMetrics fm = g2.getFontMetrics();
+        g2.drawString(title, (w - fm.stringWidth(title)) / 2, h - 34);
+
+        g2.setFont(new Font("PingFang SC", Font.PLAIN, 11));
+        g2.setColor(new Color(0x8A98A8));
+        fm = g2.getFontMetrics();
+        g2.drawString(sub, (w - fm.stringWidth(sub)) / 2, h - 15);
+    }
     private class ImportCard extends JComponent {
         private boolean hover;
 
@@ -560,21 +672,8 @@ public class MainJFrame extends JFrame implements ActionListener{
             g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
             int w = getWidth();
-            int h = getHeight();
-
-            // 卡片：白底 + 细边；悬停时边框和底色都往蓝色偏一点
-            g2.setColor(hover ? new Color(0xFBFDFF) : Color.WHITE);
-            g2.fillRoundRect(0, 0, w - 1, h - 1, 20, 20);
-            g2.setColor(hover ? UiKit.PRIMARY : new Color(0xD8E5F3));
-            g2.setStroke(new BasicStroke(1f));
-            g2.drawRoundRect(0, 0, w - 1, h - 1, 20, 20);
-
-            // 图标底盘：浅蓝圆角方块
-            int iconSize = 54;
-            int iconX = (w - iconSize) / 2;
-            int iconY = 24;
-            g2.setColor(hover ? new Color(0xD6E9FF) : new Color(0xEAF3FE));
-            g2.fillRoundRect(iconX, iconY, iconSize, iconSize, 16, 16);
+            paintCardFrame(g2, this, hover);                  // 统一的圆角白底 + 细边
+            int iconY = paintCardIconBase(g2, this, hover);   // 统一的浅蓝图标底盘
 
             // 导入图标：向下箭头 + 开口托盘
             g2.setColor(UiKit.PRIMARY);
@@ -592,13 +691,7 @@ public class MainJFrame extends JFrame implements ActionListener{
             g2.drawLine(trayX, trayBottom, trayX + 26, trayBottom);  // 托盘底
             g2.drawLine(trayX + 26, trayTop, trayX + 26, trayBottom);// 托盘右壁
 
-            // 文字
-            g2.setFont(new Font("PingFang SC", Font.BOLD, 14));
-            g2.setColor(hover ? UiKit.PRIMARY : new Color(0x1B2733));
-            String text = "导入词库";
-            FontMetrics fm = g2.getFontMetrics();
-            g2.drawString(text, (w - fm.stringWidth(text)) / 2, h - 22);
-
+            paintCardText(g2, this, hover, "导入词库", "把自己的 txt 词库加进来");
             g2.dispose();
         }
     }

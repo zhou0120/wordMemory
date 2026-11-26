@@ -9,8 +9,10 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import com.homework.Service.SpellService;
+import com.homework.Service.ReviewService;
 import com.homework.domain.Word;
 public class WordJFrame extends JFrame implements ActionListener,KeyListener {
+    ReviewService reviewService = new ReviewService();   // 错题读写统一交给 ReviewService，格式只用维护一份
     ArrayList<Word> list = new ArrayList<Word>();
     static int count = 0;
     static int ErrCount = 0;
@@ -38,6 +40,8 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
     public WordJFrame(String wordFilePath){
         sp = new SpellService(wordFilePath);
         initMenu();
+        this.addKeyListener(this);   // 添加KeyListener
+
     }
     public WordJFrame(int width,int height){
         this(width, height, "", "data/word1.txt");
@@ -50,12 +54,15 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
         this.userName = (userName == null) ? "" : userName;
         sp = new SpellService(wordFilePath);
         initJFrame(width,height);
+        this.addKeyListener(this);   // 添加KeyListener
+
     }
     /** 用合并好的单词列表开背（主页勾选多个词库时用）。 */
     public WordJFrame(int width,int height,String userName, List<Word> words){
         this.userName = (userName == null) ? "" : userName;
         sp = new SpellService(words);
         initJFrame(width,height);
+        this.addKeyListener(this);   // 添加KeyListener
     }
     private void initJFrame(int width,int height){
         // count/ErrCount 是 static，切换词库重新进入时如果不归零，会用旧下标越界
@@ -131,10 +138,17 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
         dividerWrap.setBorder(BorderFactory.createEmptyBorder(14, 0, 0, 0));
         dividerWrap.add(divider, BorderLayout.CENTER);
 
+        JPanel wrongPanel = new JPanel();// 错误次数提示区
+        JLabel wrongLabel = new JLabel("错误次数："+ErrCount, SwingConstants.CENTER);
+        wrongLabel.setFont(new Font("PingFang SC", Font.PLAIN, 12));
+        wrongLabel.setForeground(UiKit.TEXT_SUB);
+        wrongPanel.add(wrongLabel);
+
         topPanel = new JPanel(new BorderLayout());
         topPanel.setOpaque(false);
         topPanel.add(header, BorderLayout.NORTH);
         topPanel.add(dividerWrap, BorderLayout.SOUTH);
+        topPanel.add(wrongPanel, BorderLayout.EAST);
         root.add(topPanel, BorderLayout.NORTH);
 
         /* ---------- 中部：提示语 + 中文释义 + 音标 + 输入框，整体垂直居中 ---------- */
@@ -175,11 +189,15 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
         centerPanel.add(Box.createVerticalGlue());         // 下方弹性留白
         root.add(centerPanel, BorderLayout.CENTER);
 
+        //按Enter键下一个单词
+        jbutton = new UiKit.PrimaryButton("下一个(enter)");
 
-        jbutton = new UiKit.PrimaryButton("下一个");
+
         jbutton.setPreferredSize(new Dimension(180, 42));
         jbutton.setMaximumSize(new Dimension(180, 42));
         jbutton.addActionListener(this);
+
+
 
         bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         bottomPanel.setOpaque(false);
@@ -227,6 +245,8 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
         else if(obj == jbutton){
             String ans = textField.getText();
             if(!ans.equals(sp.findWord(count).getTranslate())){
+                // 错题交给 ReviewService 落盘：统一逗号格式（中文,音标,英文），写完立即关流
+                reviewService.saveWrongWord(sp.findWord(count));
                 ErrCount++;
                 list.add(new Word(sp.findWord(count)));
                 JOptionPane.showMessageDialog(this, sp.findWord(count).getTranslate());
@@ -330,7 +350,11 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
     }
     @Override
     public void keyReleased(KeyEvent e) {
-
+        int obj = e.getKeyCode();
+        // 如果是按下的键是回车键
+        if (obj == KeyEvent.VK_ENTER) {
+            jbutton.doClick();
+        }
     }
 }
 
