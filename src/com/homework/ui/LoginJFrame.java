@@ -84,7 +84,7 @@ public class LoginJFrame extends JFrame implements ActionListener, KeyListener {
         aboutmenu = new JMenu("关于我们");
         jMenuItem1 = new JMenuItem("退出");
         jMenuItem2 = new JMenuItem("重新登录");
-        aboutItem = new JMenuItem("公众号");
+        aboutItem = new JMenuItem("制作团队");
         jMenuItem1.addActionListener(this);
         jMenuItem2.addActionListener(this);
         aboutItem.addActionListener(this);
@@ -173,7 +173,7 @@ public class LoginJFrame extends JFrame implements ActionListener, KeyListener {
             System.out.println("重新登录");
         }
         else if(obj == aboutItem){
-            System.out.println("公众号");
+            System.out.println("制作团队");
         }
     }
     @Override

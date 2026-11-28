@@ -84,7 +84,7 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
         aboutmenu = new JMenu("关于我们");
         jMenuItem1 = new JMenuItem("退出");
         jMenuItem2 = new JMenuItem("重新登录");
-        aboutItem = new JMenuItem("公众号");
+        aboutItem = new JMenuItem("制作团队");
         jMenuItem1.addActionListener(this);
         jMenuItem2.addActionListener(this);
         aboutItem.addActionListener(this);
@@ -138,20 +138,43 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
         dividerWrap.setBorder(BorderFactory.createEmptyBorder(14, 0, 0, 0));
         dividerWrap.add(divider, BorderLayout.CENTER);
 
-        JPanel wrongPanel = new JPanel();// 错误次数提示区
-        JLabel wrongLabel = new JLabel("错误次数："+ErrCount, SwingConstants.CENTER);
-        wrongLabel.setFont(new Font("PingFang SC", Font.PLAIN, 12));
-        wrongLabel.setForeground(UiKit.TEXT_SUB);
-        wrongPanel.add(wrongLabel);
-
         topPanel = new JPanel(new BorderLayout());
         topPanel.setOpaque(false);
         topPanel.add(header, BorderLayout.NORTH);
         topPanel.add(dividerWrap, BorderLayout.SOUTH);
-        topPanel.add(wrongPanel, BorderLayout.EAST);
         root.add(topPanel, BorderLayout.NORTH);
 
         /* ---------- 中部：提示语 + 中文释义 + 音标 + 输入框，整体垂直居中 ---------- */
+        // === 新增代码：进度可视化面板开始 ===
+        JPanel progressPanel = new JPanel();
+        progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.Y_AXIS));
+        progressPanel.setOpaque(false);
+
+        // 进度文本 (显示时从 1 开始)
+        int currentProgress = Math.min(count + 1, sp.getTotalCount());
+        JLabel progressTextLabel = new JLabel("当前进度: " + currentProgress + " / " + sp.getTotalCount());
+        progressTextLabel.setFont(new Font("PingFang SC", Font.PLAIN, 13));
+        progressTextLabel.setForeground(UiKit.TEXT_LABEL);
+        progressTextLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 自定义进度条
+        CustomProgressBar progressBar = new CustomProgressBar(count, sp.getTotalCount());
+        progressBar.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 错误次数提示（移到这里，随着每次重绘实时刷新）
+        JLabel wrongLabel = new JLabel("错误次数：" + ErrCount);
+        wrongLabel.setFont(new Font("PingFang SC", Font.PLAIN, 12));
+        wrongLabel.setForeground(ErrCount > 0 ? new Color(0xC0392B) : UiKit.TEXT_SUB); // 错题大于0标红
+        wrongLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 组装进度区域
+        progressPanel.add(progressTextLabel);
+        progressPanel.add(Box.createRigidArea(new Dimension(0, 6)));
+        progressPanel.add(progressBar);
+        progressPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        progressPanel.add(wrongLabel);
+        // === 新增代码：进度可视化面板结束 ===
+
         JLabel tipLabel = new JLabel("根据中文提示，写出对应的英文单词", SwingConstants.CENTER);
         tipLabel.setFont(new Font("PingFang SC", Font.PLAIN, 12));
         tipLabel.setForeground(UiKit.TEXT_SUB);
@@ -174,11 +197,15 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
         textField.setBorder(BorderFactory.createEmptyBorder(0, 16, 0, 16));
         textField.setAlignmentX(Component.CENTER_ALIGNMENT);
         textField.addKeyListener(this);
+        // === 新增代码：让输入框在页面刷新后自动获取焦点 ===
+        SwingUtilities.invokeLater(() -> textField.requestFocusInWindow());
 
         centerPanel = new JPanel();
         centerPanel.setOpaque(false);
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.add(Box.createVerticalGlue());         // 上方弹性留白 → 内容整体居中
+        centerPanel.add(progressPanel);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 24))); // 增加点间距更美观
         centerPanel.add(tipLabel);
         centerPanel.add(Box.createRigidArea(new Dimension(0, 12)));
         centerPanel.add(chineseLabel);
@@ -236,7 +263,7 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
             this.dispose();
             new LoginJFrame(600,450);
         } else if (obj == aboutItem) {
-            JOptionPane.showMessageDialog(this, "公众号：程序员速成");
+            JOptionPane.showMessageDialog(this, "制作团队：周博浩、苏立浩、刘明欢");
         }
         else if (obj == back) {                       // 返回按钮：关掉拼写页，带原用户名回到主页面
             this.dispose();
@@ -354,6 +381,49 @@ public class WordJFrame extends JFrame implements ActionListener,KeyListener {
         // 如果是按下的键是回车键
         if (obj == KeyEvent.VK_ENTER) {
             jbutton.doClick();
+        }
+    }
+    /**
+     * 新增：自定义圆角进度条组件
+     */
+    private static class CustomProgressBar extends JComponent {
+        private final int current;
+        private final int total;
+
+        public CustomProgressBar(int current, int total) {
+            this.current = current;
+            this.total = total;
+            // 设定进度条的固定宽高
+            setPreferredSize(new Dimension(360, 12));
+            setMaximumSize(new Dimension(360, 12));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int w = getWidth();
+            int h = getHeight();
+            int arc = h; // 圆角弧度等于高度，形成胶囊状
+
+            // 1. 画背景轨道（浅灰蓝）
+            g2.setColor(new Color(0xE2EAF3));
+            g2.fillRoundRect(0, 0, w, h, arc, arc);
+
+            // 2. 计算进度并画前景
+            if (total > 0) {
+                double percent = (double) current / total;
+                int progressWidth = (int) (w * percent);
+                // 如果进度大于0，为了避免宽为1、2个像素时圆角变尖，最小画一个完整的圆
+                if (progressWidth > 0) {
+                    progressWidth = Math.max(progressWidth, h);
+                    g2.setColor(UiKit.PRIMARY);
+                    g2.fillRoundRect(0, 0, progressWidth, h, arc, arc);
+                }
+            }
+            g2.dispose();
         }
     }
 }

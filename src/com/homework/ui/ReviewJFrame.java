@@ -332,7 +332,7 @@ public class ReviewJFrame extends JFrame implements ActionListener {
         aboutmenu = new JMenu("关于我们");
         jMenuItem1 = new JMenuItem("退出");
         jMenuItem2 = new JMenuItem("重新登录");
-        aboutItem = new JMenuItem("公众号");
+        aboutItem = new JMenuItem("制作团队");
         jMenuItem1.addActionListener(this);
         jMenuItem2.addActionListener(this);
         aboutItem.addActionListener(this);
@@ -357,7 +357,7 @@ public class ReviewJFrame extends JFrame implements ActionListener {
             this.dispose();
             new LoginJFrame(600, 450);
         } else if (obj == aboutItem) {
-            JOptionPane.showMessageDialog(this, "公众号：程序员速成");
+            JOptionPane.showMessageDialog(this, "制作团队：周博浩、苏立浩、刘明欢");
         } else if (obj == backButton) {                  // 返回主页面，带上原用户名
             this.dispose();
             new MainJFrame(1000, 700, username);

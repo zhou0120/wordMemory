@@ -97,7 +97,7 @@ public class MainJFrame extends JFrame implements ActionListener{
         Item2 = new JMenuItem("壁纸2");
         jMenu_background.add(Item1);
         jMenu_background.add(Item2);
-        aboutItem = new JMenuItem("公众号");
+        aboutItem = new JMenuItem("制作团队");
         jMenuItem1.addActionListener(this);
         jMenuItem2.addActionListener(this);
         aboutItem.addActionListener(this);
@@ -190,9 +190,9 @@ public class MainJFrame extends JFrame implements ActionListener{
         topPanel.add(surnameBadge);
     }
     private void initcenter(){
-        centerButton = new JButton("开始背诵");
-        centerButton.setFont(new Font("PingFang SC", Font.BOLD, 14));
-        centerButton.setFocusPainted(false);
+        // 优化点1：使用 UiKit 的主按钮替换原生按钮，更加圆润好看
+        centerButton = new UiKit.PrimaryButton("开始背诵");
+        centerButton.setPreferredSize(new Dimension(140, 38)); // 稍微加宽加高一点
         centerButton.addActionListener(this);
         centerPanel.add(centerButton);
 
@@ -201,9 +201,10 @@ public class MainJFrame extends JFrame implements ActionListener{
         centerPanel.add(librarySelector);
         refreshLibraryList();
 
-        centerLabel = new JLabel("今日单词");
+        // 优化点2：把“今日单词”改成了更有陪伴感的引导语，并修改颜色
+        centerLabel = new JLabel("选好词库，即刻开始");
         centerLabel.setFont(new Font("PingFang SC", Font.PLAIN, 14));
-        centerLabel.setForeground(new Color(0x1A6FD4));
+        centerLabel.setForeground(new Color(0x5A6B7C)); // 换成 UiKit.TEXT_LABEL 的颜色
         centerPanel.add(centerLabel);
     }
 
@@ -260,10 +261,10 @@ public class MainJFrame extends JFrame implements ActionListener{
         int h = centerPanel.getHeight();
         if (w <= 0 || h <= 0) return;
 
-        int lblW = 90,  lblH = 22;
-        int btnW = 130, btnH = 34;
-        int selW = 150, selH = 34;
-        int gap  = 14;
+        int lblW = 130,  lblH = 22;
+        int btnW = 140, btnH = 38;
+        int selW = 150, selH = 38;
+        int gap  = 16;
 
         // 今日单词(左) + 开始背诵(中) + 词库下拉(右)，整组水平居中
         int totalW = lblW + gap + btnW + gap + selW;
@@ -380,7 +381,7 @@ public class MainJFrame extends JFrame implements ActionListener{
             this.dispose();
             new LoginJFrame(600,450);
         } else if (obj == aboutItem) {
-            JOptionPane.showMessageDialog(this, "公众号：程序员速成");
+            JOptionPane.showMessageDialog(this, "制作团队：周博浩、苏立浩、刘明欢");
         } else if (obj == centerButton) {
             startReciting();
         }else if(obj == Item1){
